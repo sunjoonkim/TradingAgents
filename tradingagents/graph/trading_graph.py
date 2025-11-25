@@ -49,14 +49,19 @@ def _configure_tracing(config: Dict[str, Any]) -> None:
     LangSmith tracing is controlled by environment variables. This function
     sets them based on the config to ensure consistent behavior.
     
+    Note: This function modifies global environment variables. The original
+    values are not restored after the function call. This is intentional as
+    tracing should remain enabled for the duration of the application.
+    
     Args:
         config: Configuration dictionary containing tracing settings
     """
     if config.get("tracing_enabled", False):
         os.environ["LANGSMITH_TRACING"] = "true"
-        # Set project name if specified
-        if config.get("tracing_project"):
-            os.environ["LANGSMITH_PROJECT"] = config["tracing_project"]
+        # Set project name if specified and non-empty
+        tracing_project = config.get("tracing_project", "")
+        if tracing_project and str(tracing_project).strip():
+            os.environ["LANGSMITH_PROJECT"] = str(tracing_project).strip()
     else:
         # Explicitly disable tracing if not enabled
         os.environ["LANGSMITH_TRACING"] = "false"
