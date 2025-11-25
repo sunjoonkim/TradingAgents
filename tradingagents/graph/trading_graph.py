@@ -43,6 +43,25 @@ from .reflection import Reflector
 from .signal_processing import SignalProcessor
 
 
+def _configure_tracing(config: Dict[str, Any]) -> None:
+    """Configure LangSmith tracing based on config settings.
+    
+    LangSmith tracing is controlled by environment variables. This function
+    sets them based on the config to ensure consistent behavior.
+    
+    Args:
+        config: Configuration dictionary containing tracing settings
+    """
+    if config.get("tracing_enabled", False):
+        os.environ["LANGSMITH_TRACING"] = "true"
+        # Set project name if specified
+        if config.get("tracing_project"):
+            os.environ["LANGSMITH_PROJECT"] = config["tracing_project"]
+    else:
+        # Explicitly disable tracing if not enabled
+        os.environ["LANGSMITH_TRACING"] = "false"
+
+
 class TradingAgentsGraph:
     """Main class that orchestrates the trading agents framework."""
 
@@ -61,6 +80,9 @@ class TradingAgentsGraph:
         """
         self.debug = debug
         self.config = config or DEFAULT_CONFIG
+
+        # Configure LangSmith tracing based on config
+        _configure_tracing(self.config)
 
         # Update the interface's config
         set_config(self.config)

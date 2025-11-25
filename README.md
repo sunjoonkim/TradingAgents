@@ -129,6 +129,41 @@ cp .env.example .env
 
 **Note:** We are happy to partner with Alpha Vantage to provide robust API support for TradingAgents. You can get a free AlphaVantage API [here](https://www.alphavantage.co/support/#api-key), TradingAgents-sourced requests also have increased rate limits to 60 requests per minute with no daily limits. Typically the quota is sufficient for performing complex tasks with TradingAgents thanks to Alpha Vantage’s open-source support program. If you prefer to use OpenAI for these data sources instead, you can modify the data vendor settings in `tradingagents/default_config.py`.
 
+### Tracing with LangSmith (Optional)
+
+TradingAgents supports [LangSmith](https://smith.langchain.com/) for tracing and observability. LangSmith allows you to:
+- Monitor all LLM calls and agent interactions
+- Debug agent behavior and decision-making
+- Track token usage and costs
+- Analyze performance across different runs
+
+To enable tracing:
+
+1. Get your LangSmith API key from [smith.langchain.com](https://smith.langchain.com/)
+2. Set the following environment variables:
+
+```bash
+export LANGSMITH_TRACING=true
+export LANGSMITH_API_KEY=$YOUR_LANGSMITH_API_KEY
+export LANGSMITH_PROJECT=TradingAgents  # Optional: customize project name
+```
+
+Or add them to your `.env` file:
+```bash
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=TradingAgents
+```
+
+You can also enable tracing programmatically:
+```python
+config = DEFAULT_CONFIG.copy()
+config["tracing_enabled"] = True
+config["tracing_project"] = "MyTradingProject"
+
+ta = TradingAgentsGraph(debug=True, config=config)
+```
+
 ### CLI Usage
 
 You can also try out the CLI directly by running:
