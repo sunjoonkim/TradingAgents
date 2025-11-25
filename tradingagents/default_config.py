@@ -17,6 +17,11 @@ DEFAULT_CONFIG = {
     "max_debate_rounds": 1,
     "max_risk_discuss_rounds": 1,
     "max_recur_limit": 100,
+    # Tracing settings (LangSmith)
+    # Set LANGSMITH_TRACING=true environment variable to enable tracing
+    # Also set LANGSMITH_API_KEY and optionally LANGSMITH_PROJECT
+    "tracing_enabled": os.getenv("LANGSMITH_TRACING", "false").lower() == "true",
+    "tracing_project": os.getenv("LANGSMITH_PROJECT", "TradingAgents"),
     # Data vendor configuration
     # Category-level configuration (default for all tools in category)
     "data_vendors": {
