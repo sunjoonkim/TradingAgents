@@ -114,10 +114,27 @@ pip install -r requirements.txt
 
 ### Required APIs
 
-You will need the OpenAI API for all the agents, and [Alpha Vantage API](https://www.alphavantage.co/support/#api-key) for fundamental and news data (default configuration).
+The framework supports multiple LLM providers. You will need API keys based on your chosen provider:
+
+**LLM Providers (choose one):**
+- **OpenAI**: For GPT-4, GPT-4o, o1, o3, and o4 series models
+- **Google Gemini**: For Gemini 2.0 and 2.5 series models  
+- **Anthropic**: For Claude 3.5 and Claude 4 series models
+- **OpenRouter**: For accessing various models through a unified API
+- **Ollama**: For running local models (no API key required)
+
+**Data Provider:**
+- [Alpha Vantage API](https://www.alphavantage.co/support/#api-key) for fundamental and news data (default configuration)
 
 ```bash
+# Set your chosen LLM provider's API key
 export OPENAI_API_KEY=$YOUR_OPENAI_API_KEY
+# Or for Google Gemini:
+export GOOGLE_API_KEY=$YOUR_GOOGLE_API_KEY
+# Or for Anthropic:
+export ANTHROPIC_API_KEY=$YOUR_ANTHROPIC_API_KEY
+
+# Data provider (required)
 export ALPHA_VANTAGE_API_KEY=$YOUR_ALPHA_VANTAGE_API_KEY
 ```
 
@@ -180,8 +197,8 @@ from tradingagents.default_config import DEFAULT_CONFIG
 
 # Create a custom config
 config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-4.1-nano"  # Use a different model
-config["quick_think_llm"] = "gpt-4.1-nano"  # Use a different model
+config["deep_think_llm"] = "gpt-4o"  # Use a different model
+config["quick_think_llm"] = "gpt-4o-mini"  # Use a different model
 config["max_debate_rounds"] = 1  # Increase debate rounds
 
 # Configure data vendors (default uses yfinance and Alpha Vantage)
@@ -196,6 +213,41 @@ config["data_vendors"] = {
 ta = TradingAgentsGraph(debug=True, config=config)
 
 # forward propagate
+_, decision = ta.propagate("NVDA", "2024-05-10")
+print(decision)
+```
+
+**Using Google Gemini as the LLM Provider:**
+
+```python
+from tradingagents.graph.trading_graph import TradingAgentsGraph
+from tradingagents.default_config import DEFAULT_CONFIG
+
+# Create a config for Google Gemini
+config = DEFAULT_CONFIG.copy()
+config["llm_provider"] = "google"
+config["deep_think_llm"] = "gemini-2.5-pro-preview-06-05"
+config["quick_think_llm"] = "gemini-2.0-flash"
+
+ta = TradingAgentsGraph(debug=True, config=config)
+_, decision = ta.propagate("NVDA", "2024-05-10")
+print(decision)
+```
+
+**Using Anthropic Claude as the LLM Provider:**
+
+```python
+from tradingagents.graph.trading_graph import TradingAgentsGraph
+from tradingagents.default_config import DEFAULT_CONFIG
+
+# Create a config for Anthropic Claude
+config = DEFAULT_CONFIG.copy()
+config["llm_provider"] = "anthropic"
+config["backend_url"] = "https://api.anthropic.com/"
+config["deep_think_llm"] = "claude-sonnet-4-0"
+config["quick_think_llm"] = "claude-3-5-haiku-latest"
+
+ta = TradingAgentsGraph(debug=True, config=config)
 _, decision = ta.propagate("NVDA", "2024-05-10")
 print(decision)
 ```

@@ -129,9 +129,10 @@ def select_shallow_thinking_agent(provider) -> str:
     SHALLOW_AGENT_OPTIONS = {
         "openai": [
             ("GPT-4o-mini - Fast and efficient for quick tasks", "gpt-4o-mini"),
-            ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
-            ("GPT-4.1-mini - Compact model with good performance", "gpt-4.1-mini"),
             ("GPT-4o - Standard model with solid capabilities", "gpt-4o"),
+            ("GPT-4-turbo - High capability with vision support", "gpt-4-turbo"),
+            ("GPT-4.1-mini - Compact model with good performance", "gpt-4.1-mini"),
+            ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
         ],
         "anthropic": [
             ("Claude Haiku 3.5 - Fast inference and standard capabilities", "claude-3-5-haiku-latest"),
@@ -186,20 +187,22 @@ def select_deep_thinking_agent(provider) -> str:
     # Define deep thinking llm engine options with their corresponding model names
     DEEP_AGENT_OPTIONS = {
         "openai": [
-            ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
-            ("GPT-4.1-mini - Compact model with good performance", "gpt-4.1-mini"),
             ("GPT-4o - Standard model with solid capabilities", "gpt-4o"),
-            ("o4-mini - Specialized reasoning model (compact)", "o4-mini"),
-            ("o3-mini - Advanced reasoning model (lightweight)", "o3-mini"),
-            ("o3 - Full advanced reasoning model", "o3"),
+            ("GPT-4-turbo - High capability with vision support", "gpt-4-turbo"),
+            ("GPT-4.1-mini - Compact model with good performance", "gpt-4.1-mini"),
+            ("GPT-4.1-nano - Ultra-lightweight model for basic operations", "gpt-4.1-nano"),
+            ("o1-mini - Compact reasoning model", "o1-mini"),
+            ("o1-preview - Preview reasoning model", "o1-preview"),
             ("o1 - Premier reasoning and problem-solving model", "o1"),
+            ("o3-mini - Advanced reasoning model (lightweight)", "o3-mini"),
+            ("o4-mini - Specialized reasoning model (compact)", "o4-mini"),
         ],
         "anthropic": [
             ("Claude Haiku 3.5 - Fast inference and standard capabilities", "claude-3-5-haiku-latest"),
             ("Claude Sonnet 3.5 - Highly capable standard model", "claude-3-5-sonnet-latest"),
             ("Claude Sonnet 3.7 - Exceptional hybrid reasoning and agentic capabilities", "claude-3-7-sonnet-latest"),
             ("Claude Sonnet 4 - High performance and excellent reasoning", "claude-sonnet-4-0"),
-            ("Claude Opus 4 - Most powerful Anthropic model", "	claude-opus-4-0"),
+            ("Claude Opus 4 - Most powerful Anthropic model", "claude-opus-4-0"),
         ],
         "google": [
             ("Gemini 2.0 Flash-Lite - Cost efficiency and low latency", "gemini-2.0-flash-lite"),
