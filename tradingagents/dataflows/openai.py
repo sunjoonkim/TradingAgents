@@ -1,10 +1,17 @@
+import os
 from openai import OpenAI
 from .config import get_config
 
 
 def get_stock_news_openai(query, start_date, end_date):
     config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. "
+            "Please set it in your .env file or environment."
+        )
+    client = OpenAI(api_key=api_key, base_url=config["backend_url"])
 
     response = client.responses.create(
         model=config["quick_think_llm"],
@@ -39,7 +46,13 @@ def get_stock_news_openai(query, start_date, end_date):
 
 def get_global_news_openai(curr_date, look_back_days=7, limit=5):
     config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. "
+            "Please set it in your .env file or environment."
+        )
+    client = OpenAI(api_key=api_key, base_url=config["backend_url"])
 
     response = client.responses.create(
         model=config["quick_think_llm"],
@@ -74,7 +87,13 @@ def get_global_news_openai(curr_date, look_back_days=7, limit=5):
 
 def get_fundamentals_openai(ticker, curr_date):
     config = get_config()
-    client = OpenAI(base_url=config["backend_url"])
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "OPENAI_API_KEY environment variable is not set. "
+            "Please set it in your .env file or environment."
+        )
+    client = OpenAI(api_key=api_key, base_url=config["backend_url"])
 
     response = client.responses.create(
         model=config["quick_think_llm"],
