@@ -2,7 +2,10 @@
 Tests for the TradingAgents Evaluation Framework
 """
 
+import json
+from datetime import datetime, date
 import pytest
+import numpy as np
 from tradingagents.evaluation import (
     TradingMetrics,
     Backtester,
@@ -15,6 +18,49 @@ from tradingagents.evaluation import (
     build_confusion_matrix,
     calculate_returns_from_decisions,
 )
+from tradingagents.evaluation.evaluator import EvaluationJSONEncoder
+
+
+class TestEvaluationJSONEncoder:
+    """Tests for the EvaluationJSONEncoder class."""
+
+    def test_encode_datetime(self):
+        dt = datetime(2024, 1, 15, 10, 30, 0)
+        result = json.dumps({"dt": dt}, cls=EvaluationJSONEncoder)
+        assert "2024-01-15T10:30:00" in result
+
+    def test_encode_date(self):
+        d = date(2024, 1, 15)
+        result = json.dumps({"d": d}, cls=EvaluationJSONEncoder)
+        assert "2024-01-15" in result
+
+    def test_encode_numpy_int(self):
+        val = np.int64(42)
+        result = json.dumps({"val": val}, cls=EvaluationJSONEncoder)
+        data = json.loads(result)
+        assert data["val"] == 42
+
+    def test_encode_numpy_float(self):
+        val = np.float64(3.14)
+        result = json.dumps({"val": val}, cls=EvaluationJSONEncoder)
+        data = json.loads(result)
+        assert abs(data["val"] - 3.14) < 0.001
+
+    def test_encode_numpy_array(self):
+        arr = np.array([1, 2, 3])
+        result = json.dumps({"arr": arr}, cls=EvaluationJSONEncoder)
+        data = json.loads(result)
+        assert data["arr"] == [1, 2, 3]
+
+    def test_encode_nan(self):
+        result = json.dumps({"val": float('nan')}, cls=EvaluationJSONEncoder)
+        data = json.loads(result)
+        assert data["val"] is None
+
+    def test_encode_inf(self):
+        result = json.dumps({"val": float('inf')}, cls=EvaluationJSONEncoder)
+        data = json.loads(result)
+        assert data["val"] is None
 
 
 class TestCalculateAccuracy:

@@ -7,9 +7,11 @@ with backtesting and metrics calculation for comprehensive performance evaluatio
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
+
+import numpy as np
 
 from .backtester import Backtester
 from .metrics import (
@@ -22,6 +24,41 @@ from .metrics import (
     build_confusion_matrix,
 )
 
+
+class EvaluationJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for evaluation results."""
+    
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            if np.isnan(obj) or np.isinf(obj):
+                return None
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+    
+    def encode(self, obj):
+        """Override encode to handle native Python nan/inf values."""
+        return super().encode(self._sanitize_floats(obj))
+    
+    def _sanitize_floats(self, obj):
+        """Recursively replace nan/inf with None."""
+        import math
+        if isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
+        elif isinstance(obj, dict):
+            return {k: self._sanitize_floats(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._sanitize_floats(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(self._sanitize_floats(item) for item in obj)
+        return obj
 
 class Evaluator:
     """
@@ -340,7 +377,7 @@ class Evaluator:
         filepath = os.path.join(self.results_dir, filename)
         
         with open(filepath, 'w') as f:
-            json.dump(results, f, indent=2, default=str)
+            json.dump(results, f, indent=2, cls=EvaluationJSONEncoder)
         
         return filepath
     
