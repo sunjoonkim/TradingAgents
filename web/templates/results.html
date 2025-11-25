@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ ticker }} · TradingAgents Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}" />
+</head>
+<body>
+    <main class="page">
+        <header class="hero">
+            <h1>{{ ticker }} — Research Brief</h1>
+            <p>{{ start_date }} → {{ end_date }} · {{ provider }} · quick {{ shallow_model }} · deep {{ deep_model }}</p>
+        </header>
+
+        <section class="card stack">
+            <div class="meta-grid">
+                <div>
+                    <span class="label">Analyst team</span>
+                    <p>{{ analyst_labels | join(', ') }}</p>
+                </div>
+                <div>
+                    <span class="label">Research depth</span>
+                    <p>{{ research_depth }} round{% if research_depth != 1 %}s{% endif %}</p>
+                </div>
+                <div>
+                    <span class="label">Risk profile</span>
+                    <p>{{ risk_profile }}</p>
+                </div>
+                <div>
+                    <span class="label">Capital allocation</span>
+                    <p>{{ capital_allocation or '—' }}</p>
+                </div>
+                <div>
+                    <span class="label">Time horizon</span>
+                    <p>{{ time_horizon }}</p>
+                </div>
+                <div>
+                    <span class="label">Backend URL</span>
+                    <p class="muted">{{ backend_url }}</p>
+                </div>
+            </div>
+            {% if notes %}
+                <div>
+                    <span class="label">Playbook notes</span>
+                    <p>{{ notes }}</p>
+                </div>
+            {% endif %}
+        </section>
+
+        {% if errors %}
+            <section class="card alert">
+                <h2>Issues encountered</h2>
+                <ul>
+                    {% for error in errors %}
+                        <li><strong>{{ error.date }}:</strong> {{ error.message }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        {% for item in results %}
+            <section class="card stack">
+                <header class="section-header">
+                    <h2>{{ item.date }}</h2>
+                    <p class="muted">Final stance: {{ item.decision }}</p>
+                </header>
+                <details open>
+                    <summary>Trading decision</summary>
+                    <p>{{ item.decision }}</p>
+                </details>
+                {% if item.market_report %}
+                    <details>
+                        <summary>Market landscape</summary>
+                        <p>{{ item.market_report }}</p>
+                    </details>
+                {% endif %}
+                {% if item.sentiment_report %}
+                    <details>
+                        <summary>Social sentiment</summary>
+                        <p>{{ item.sentiment_report }}</p>
+                    </details>
+                {% endif %}
+                {% if item.news_report %}
+                    <details>
+                        <summary>News pulse</summary>
+                        <p>{{ item.news_report }}</p>
+                    </details>
+                {% endif %}
+                {% if item.fundamentals_report %}
+                    <details>
+                        <summary>Fundamentals</summary>
+                        <p>{{ item.fundamentals_report }}</p>
+                    </details>
+                {% endif %}
+                {% if item.trader_plan %}
+                    <details>
+                        <summary>Trader playbook</summary>
+                        <p>{{ item.trader_plan }}</p>
+                    </details>
+                {% endif %}
+                {% if item.investment_plan %}
+                    <details>
+                        <summary>Research committee</summary>
+                        <p>{{ item.investment_plan }}</p>
+                    </details>
+                {% endif %}
+                {% if item.risk_summary %}
+                    <details>
+                        <summary>Risk desk</summary>
+                        <p>{{ item.risk_summary }}</p>
+                    </details>
+                {% endif %}
+            </section>
+        {% endfor %}
+
+        <nav class="actions wide">
+            <a href="/" class="ghost">Configure another run</a>
+        </nav>
+    </main>
+</body>
+</html>

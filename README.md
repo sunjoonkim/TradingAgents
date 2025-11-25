@@ -151,11 +151,21 @@ An interface will appear showing results as they load, letting you track the age
   <img src="assets/cli/cli_transaction.png" width="100%" style="display: inline-block; margin: 0 2%;">
 </p>
 
+### Minimal Web Dashboard
+
+A lightweight FastAPI UI is available in `web/app.py` for quick configuration from the browser. It exposes the same model roster, analyst selections, and trader-focused metadata (risk profile, allocation, time horizon) in a clean, minimal layout.
+
+```bash
+uvicorn web.app:app --reload
+```
+
+Then open [http://localhost:8000](http://localhost:8000) to launch the dashboard, pick your ticker/date range, and review the generated brief.
+
 ## TradingAgents Package
 
 ### Implementation Details
 
-We built TradingAgents with LangGraph to ensure flexibility and modularity. We utilize `o1-preview` and `gpt-4o` as our deep thinking and fast thinking LLMs for our experiments. However, for testing purposes, we recommend you use `o4-mini` and `gpt-4.1-mini` to save on costs as our framework makes **lots of** API calls.
+We built TradingAgents with LangGraph to ensure flexibility and modularity. We utilize `o1-preview` and `gpt-4o` as our deep thinking and fast thinking LLMs for our experiments. However, for testing purposes, we recommend you use `o1-mini` and `gpt-4o-mini` to save on costs as our framework makes **lots of** API calls.
 
 ### Python Usage
 

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TradingAgents Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}" />
+</head>
+<body data-shallow='{{ shallow_models | tojson | safe }}' data-deep='{{ deep_models | tojson | safe }}'>
+    <main class="page">
+        <header class="hero">
+            <h1>TradingAgents Dashboard</h1>
+            <p>Configure a research session in seconds. Minimal distractions, maximum signal.</p>
+        </header>
+
+        {% if form_error %}
+            <div class="alert">{{ form_error }}</div>
+        {% endif %}
+
+        <section class="card">
+            <form method="post" action="/analyze" class="grid">
+                <div class="field">
+                    <label for="ticker">Ticker</label>
+                    <input id="ticker" name="ticker" type="text" placeholder="SPY" required />
+                </div>
+                <div class="field">
+                    <label for="start_date">Start date</label>
+                    <input id="start_date" name="start_date" type="date" required />
+                </div>
+                <div class="field">
+                    <label for="end_date">End date</label>
+                    <input id="end_date" name="end_date" type="date" required />
+                </div>
+                <div class="field">
+                    <label for="provider">LLM provider</label>
+                    <select id="provider" name="provider" required>
+                        {% for option in provider_options %}
+                            <option value="{{ option.value }}" data-url="{{ option.url }}">{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="shallow_model">Quick-thinking model</label>
+                    <select id="shallow_model" name="shallow_model" required></select>
+                </div>
+                <div class="field">
+                    <label for="deep_model">Deep-thinking model</label>
+                    <select id="deep_model" name="deep_model" required></select>
+                </div>
+                <div class="field">
+                    <span class="label">Research depth</span>
+                    <div class="chips">
+                        {% for option in research_depth_options %}
+                            <label class="chip">
+                                <input type="radio" name="research_depth" value="{{ option.value }}" {% if loop.first %}checked{% endif %} />
+                                <span>{{ option.label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="field wide">
+                    <span class="label">Analyst team</span>
+                    <div class="chips wrap">
+                        {% for label, value in analysts %}
+                            <label class="chip">
+                                <input type="checkbox" name="analysts" value="{{ value }}" checked />
+                                <span>{{ label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="risk_profile">Risk profile</label>
+                    <select id="risk_profile" name="risk_profile">
+                        <option>Conservative</option>
+                        <option selected>Balanced</option>
+                        <option>Aggressive</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="capital_allocation">Capital allocation target</label>
+                    <input id="capital_allocation" name="capital_allocation" type="text" placeholder="e.g. $25,000" />
+                </div>
+                <div class="field">
+                    <label for="time_horizon">Time horizon</label>
+                    <select id="time_horizon" name="time_horizon">
+                        <option selected>Day Trading</option>
+                        <option>Swing (2-14 days)</option>
+                        <option>Position (1-3 months)</option>
+                        <option>Long-term (3+ months)</option>
+                    </select>
+                </div>
+                <div class="field wide">
+                    <label for="notes">Playbook notes</label>
+                    <textarea id="notes" name="notes" rows="3" placeholder="Catalysts, open positions, hedges..."></textarea>
+                </div>
+                <div class="actions wide">
+                    <button type="submit" class="primary">Run analysis</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const shallowOptions = JSON.parse(document.body.dataset.shallow || '{}');
+        const deepOptions = JSON.parse(document.body.dataset.deep || '{}');
+        const providerSelect = document.getElementById('provider');
+        const shallowSelect = document.getElementById('shallow_model');
+        const deepSelect = document.getElementById('deep_model');
+
+        function populateModels(providerKey) {
+            const shallow = shallowOptions[providerKey] || [];
+            const deep = deepOptions[providerKey] || [];
+
+            shallowSelect.innerHTML = '';
+            deepSelect.innerHTML = '';
+
+            shallow.forEach(([label, value]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                shallowSelect.appendChild(option);
+            });
+
+            deep.forEach(([label, value]) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = label;
+                deepSelect.appendChild(option);
+            });
+        }
+
+        providerSelect.addEventListener('change', (event) => {
+            populateModels(event.target.value);
+        });
+
+        // initialise defaults
+        populateModels(providerSelect.value);
+    </script>
+</body>
+</html>

@@ -24,7 +24,6 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
-from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
@@ -36,6 +35,14 @@ app = typer.Typer(
     help="TradingAgents CLI: Multi-Agents LLM Financial Trading Framework",
     add_completion=True,  # Enable shell completion
 )
+
+PROVIDER_DISPLAY_NAMES = {
+    "openai": "OpenAI",
+    "anthropic": "Anthropic",
+    "google": "Google",
+    "openrouter": "OpenRouter",
+    "ollama": "Ollama",
+}
 
 
 # Create a deque to store recent messages with a maximum length
@@ -74,6 +81,9 @@ class MessageBuffer:
             "trader_investment_plan": None,
             "final_trade_decision": None,
         }
+        self.quick_model = None
+        self.deep_model = None
+        self.llm_provider = None
 
     def add_message(self, message_type, content):
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
@@ -170,6 +180,15 @@ class MessageBuffer:
 
         self.final_report = "\n\n".join(report_parts) if report_parts else None
 
+    def set_model_context(self, quick_model: Optional[str], deep_model: Optional[str], provider: Optional[str]):
+        self.quick_model = quick_model
+        self.deep_model = deep_model
+        if provider:
+            provider_key = provider.lower()
+            self.llm_provider = PROVIDER_DISPLAY_NAMES.get(provider_key, provider)
+        else:
+            self.llm_provider = None
+
 
 message_buffer = MessageBuffer()
 
@@ -192,10 +211,21 @@ def create_layout():
 
 def update_display(layout, spinner_text=None):
     # Header with welcome message
+    header_lines = [
+        "[bold green]Welcome to TradingAgents CLI[/bold green]",
+        "[dim]© [Tauric Research](https://github.com/TauricResearch)[/dim]",
+    ]
+    if message_buffer.llm_provider or message_buffer.quick_model or message_buffer.deep_model:
+        provider_label = message_buffer.llm_provider.title() if message_buffer.llm_provider else ""
+        quick_label = message_buffer.quick_model or "—"
+        deep_label = message_buffer.deep_model or "—"
+        header_lines.append(
+            f"[bold cyan]Active Models[/bold cyan]: {provider_label} · Quick → {quick_label} · Deep → {deep_label}"
+        )
+
     layout["header"].update(
         Panel(
-            "[bold green]Welcome to TradingAgents CLI[/bold green]\n"
-            "[dim]© [Tauric Research](https://github.com/TauricResearch)[/dim]",
+            "\n".join(header_lines),
             title="Welcome to TradingAgents",
             border_style="green",
             padding=(1, 2),
@@ -735,9 +765,62 @@ def extract_content_string(content):
     else:
         return str(content)
 
-def run_analysis():
-    # First get all user selections
-    selections = get_user_selections()
+def run_analysis(
+    ticker: Optional[str] = None,
+    analysis_date: Optional[str] = None,
+    analysts: Optional[str] = None,
+    research_depth: Optional[int] = None,
+    llm_provider: Optional[str] = None,
+    shallow_thinker: Optional[str] = None,
+    deep_thinker: Optional[str] = None,
+    backend_url: Optional[str] = None,
+    dry_run: bool = False,
+):
+    """Run the analysis workflow.
+
+    If required arguments are provided, runs in non-interactive mode. Otherwise falls back
+    to interactive questionnaire.
+
+    Args:
+        ticker: Stock ticker symbol.
+        analysis_date: Trading/analysis date (YYYY-MM-DD).
+        analysts: Comma-separated analyst types (market,social,news,fundamentals).
+        research_depth: Debate depth (1,3,5).
+        llm_provider: LLM provider name (openai, anthropic, google, openrouter, ollama).
+        shallow_thinker: Quick-thinking model name.
+        deep_thinker: Deep-thinking model name.
+        backend_url: Override for provider base URL.
+        dry_run: If True, build config and exit before invoking LLMs.
+    """
+    if all([
+        ticker,
+        analysis_date,
+        analysts,
+        research_depth is not None,
+        llm_provider,
+        shallow_thinker,
+        deep_thinker,
+    ]):
+        # Non-interactive selections
+        analyst_list = []
+        for a in analysts.split(","):
+            a = a.strip().lower()
+            if a not in {"market", "social", "news", "fundamentals"}:
+                raise ValueError(f"Unsupported analyst type: {a}")
+            analyst_list.append(AnalystType(a))
+        selections = {
+            "ticker": ticker.upper(),
+            "analysis_date": analysis_date,
+            "analysts": analyst_list,
+            "research_depth": research_depth,
+            "llm_provider": llm_provider.lower(),
+            "backend_url": backend_url or default_provider_url(llm_provider),
+            "shallow_thinker": shallow_thinker,
+            "deep_thinker": deep_thinker,
+        }
+    else:
+        # Fallback interactive mode
+        selections = get_user_selections()
 
     # Create config with selected research depth
     config = DEFAULT_CONFIG.copy()
@@ -748,7 +831,34 @@ def run_analysis():
     config["backend_url"] = selections["backend_url"]
     config["llm_provider"] = selections["llm_provider"].lower()
 
-    # Initialize the graph
+    message_buffer.set_model_context(
+        selections["shallow_thinker"],
+        selections["deep_thinker"],
+        selections["llm_provider"],
+    )
+
+    if dry_run:
+        console.print(Panel(
+            f"[bold green]Dry Run Configuration[/bold green]\nTicker: {selections['ticker']}\nDate: {selections['analysis_date']}\nAnalysts: {', '.join(a.value for a in selections['analysts'])}\nDepth: {selections['research_depth']}\nProvider: {selections['llm_provider']}\nBackend URL: {config['backend_url']}\nQuick Model: {config['quick_think_llm']}\nDeep Model: {config['deep_think_llm']}",
+            title="Dry Run", border_style="green"
+        ))
+        return
+
+    # Attempt dynamic import only when needed
+    try:
+        from tradingagents.graph.trading_graph import TradingAgentsGraph  # type: ignore
+    except ModuleNotFoundError as e:
+        console.print(Panel(
+            f"[red]Failed to import TradingAgentsGraph due to missing dependency: {e}[/red]\n"\
+            "Please ensure project dependencies are installed in the active environment.\n"\
+            "Recommended: use Python 3.11 (pyproject requires >=3.10; some libs may not yet support 3.14).\n"\
+            "Install with: pip install -r requirements.txt or recreate a conda env (python=3.11).\n"\
+            "Then rerun the analyze command.",
+            title="Import Error", border_style="red"
+        ))
+        return
+
+    # Initialize the graph (debug True for streaming display)
     graph = TradingAgentsGraph(
         [analyst.value for analyst in selections["analysts"]], config=config, debug=True
     )
@@ -1100,9 +1210,39 @@ def run_analysis():
         update_display(layout)
 
 
+def default_provider_url(provider: str) -> str:
+    mapping = {
+        "openai": "https://api.openai.com/v1",
+        "anthropic": "https://api.anthropic.com/",
+        "google": "https://generativelanguage.googleapis.com/v1",
+        "openrouter": "https://openrouter.ai/api/v1",
+        "ollama": "http://localhost:11434/v1",
+    }
+    return mapping.get(provider.lower(), "https://api.openai.com/v1")
+
 @app.command()
-def analyze():
-    run_analysis()
+def analyze(
+    ticker: Optional[str] = typer.Option(None, help="Ticker symbol (non-interactive mode)"),
+    date: Optional[str] = typer.Option(None, help="Analysis date YYYY-MM-DD"),
+    analysts: Optional[str] = typer.Option(None, help="Comma separated analyst list: market,social,news,fundamentals"),
+    depth: Optional[int] = typer.Option(None, help="Research depth rounds (1/3/5)"),
+    provider: Optional[str] = typer.Option(None, help="LLM provider: openai/anthropic/google/openrouter/ollama"),
+    shallow_model: Optional[str] = typer.Option(None, help="Quick-thinking model"),
+    deep_model: Optional[str] = typer.Option(None, help="Deep-thinking model"),
+    backend_url: Optional[str] = typer.Option(None, help="Override backend base URL"),
+    dry_run: bool = typer.Option(False, help="Show config and exit (no model calls)"),
+):
+    run_analysis(
+        ticker=ticker,
+        analysis_date=date,
+        analysts=analysts,
+        research_depth=depth,
+        llm_provider=provider,
+        shallow_thinker=shallow_model,
+        deep_thinker=deep_model,
+        backend_url=backend_url,
+        dry_run=dry_run,
+    )
 
 
 if __name__ == "__main__":

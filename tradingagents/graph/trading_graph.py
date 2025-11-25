@@ -73,14 +73,61 @@ class TradingAgentsGraph:
 
         # Initialize LLMs
         if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
-            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
+            # Get API key from environment
+            if self.config["llm_provider"] == "ollama":
+                # Ollama doesn't require a real API key
+                api_key = os.getenv("OPENAI_API_KEY", "ollama")
+            else:
+                api_key = os.getenv("OPENAI_API_KEY")
+                if not api_key:
+                    raise ValueError(
+                        "OPENAI_API_KEY environment variable is not set. "
+                        "Please set it in your .env file or environment."
+                    )
+            self.deep_thinking_llm = ChatOpenAI(
+                model=self.config["deep_think_llm"], 
+                base_url=self.config["backend_url"],
+                api_key=api_key
+            )
+            self.quick_thinking_llm = ChatOpenAI(
+                model=self.config["quick_think_llm"], 
+                base_url=self.config["backend_url"],
+                api_key=api_key
+            )
         elif self.config["llm_provider"].lower() == "anthropic":
-            self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
-            self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
+            # Get Anthropic API key from environment
+            anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+            if not anthropic_api_key:
+                raise ValueError(
+                    "ANTHROPIC_API_KEY environment variable is not set. "
+                    "Please set it in your .env file or environment."
+                )
+            self.deep_thinking_llm = ChatAnthropic(
+                model=self.config["deep_think_llm"], 
+                base_url=self.config["backend_url"],
+                api_key=anthropic_api_key
+            )
+            self.quick_thinking_llm = ChatAnthropic(
+                model=self.config["quick_think_llm"], 
+                base_url=self.config["backend_url"],
+                api_key=anthropic_api_key
+            )
         elif self.config["llm_provider"].lower() == "google":
-            self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
-            self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
+            # Get Google API key from environment
+            google_api_key = os.getenv("GOOGLE_API_KEY")
+            if not google_api_key:
+                raise ValueError(
+                    "GOOGLE_API_KEY environment variable is not set. "
+                    "Please set it in your .env file or environment."
+                )
+            self.deep_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["deep_think_llm"],
+                google_api_key=google_api_key
+            )
+            self.quick_thinking_llm = ChatGoogleGenerativeAI(
+                model=self.config["quick_think_llm"],
+                google_api_key=google_api_key
+            )
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
         
