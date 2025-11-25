@@ -18,6 +18,7 @@ dependencies = [
     "langchain-google-genai>=2.1.5",
     "langchain-openai>=0.3.23",
     "langgraph>=0.4.8",
+    "numpy>=1.24.0",
     "pandas>=2.3.0",
     "parsel>=1.10.0",
     "praw>=7.8.1",
@@ -32,4 +33,9 @@ dependencies = [
     "tushare>=1.4.21",
     "typing-extensions>=4.14.0",
     "yfinance>=0.2.63",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
 ]
